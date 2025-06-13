@@ -1,12 +1,12 @@
 📧 Email Web Scraper
-A simple tool to crawl a website, extract all email addresses, and optionally send customized emails using Gmail SMTP.
+A simple tool to crawl a website, extract all email addresses, and optionally send customized emails using Gmail SMTP.  
 **Please make sure that the url name begins with https://
 
 🚀 How to Run
 bash
 Copy
 # 1. Clone the repository
-git clone https://github.com/vliu12/gmail-api.git
+git clone https://github.com/vliu12/gmail-api.git  
 cd gmail-api
 
 # 2. Install dependencies
