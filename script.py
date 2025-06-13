@@ -1,9 +1,17 @@
 from collections import deque
 import urllib.parse
 import re
+import csv
 from bs4 import BeautifulSoup
 import requests
 import requests.exceptions as request_exception
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from typing import List
+
+def is_same_domain(base_url, new_url):
+    return urllib.parse.urlparse(base_url).netloc == urllib.parse.urlparse(new_url).netloc
 
 
 def get_base_url(url: str) -> str:
@@ -102,10 +110,55 @@ def scrape_website(start_url: str, max_count: int = 100) -> set[str]:
         for anchor in soup.find_all('a'):
             link = anchor.get('href', '')
             normalized_link = normalize_link(link, base_url, page_path)
-            if normalized_link not in urls_to_process and normalized_link not in scraped_urls:
+
+            # Only follow links on the same domain
+            if (
+                normalized_link not in urls_to_process
+                and normalized_link not in scraped_urls
+                and is_same_domain(start_url, normalized_link)
+            ):
                 urls_to_process.append(normalized_link)
 
     return collected_emails
+
+
+def send_emails(emails: set[str], sender_email: str, sender_password: str, subject: str, message: str) -> None:
+    """
+    Sends an email to a list of recipients using SMTP.
+
+    :param emails: Set of email addresses to send to
+    :param sender_email: The sender's email address
+    :param sender_password: The sender's email password or app password
+    :param subject: The email subject
+    :param message: The email message content
+    """
+    # Create message
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['Subject'] = subject
+    
+    # Add message body
+    msg.attach(MIMEText(message, 'plain'))
+    
+    # Connect to Gmail's SMTP server
+    try:
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(sender_email, sender_password)
+        
+        # Send email to each recipient
+        for email in emails:
+            msg['To'] = email
+            try:
+                server.send_message(msg)
+                print(f'[+] Email sent successfully to {email}')
+            except Exception as e:
+                print(f'[-] Failed to send email to {email}: {str(e)}')
+        
+        server.quit()
+        print('\n[+] Email sending completed!')
+    except Exception as e:
+        print(f'[-] Error connecting to SMTP server: {str(e)}')
 
 
 try:
@@ -117,7 +170,27 @@ try:
         print('\n[+] Found emails:')
         for email in emails:
             print(email)
+            
+        # Ask if user wants to send emails
+        send_choice = input('\n[?] Would you like to send an email to these addresses? (yes/no): ').lower()
+        if send_choice == 'yes':
+            sender_email = input('[+] Enter your Gmail address: ')
+            sender_password = input('[+] Enter your Gmail app password: ')  # Use app password for Gmail
+            subject = input('[+] Enter email subject: ')
+            message = input('[+] Enter email message: ')
+            
+            send_emails(emails, sender_email, sender_password, subject, message)
     else:
         print('[-] No emails found.')
 except KeyboardInterrupt:
     print('[-] Closing!')
+
+
+# Save emails to a CSV file
+with open("collected_emails.csv", mode="w", newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(["Email"])  # Header
+    for email in emails:
+        writer.writerow([email])
+
+print(f'\n[+] Emails saved to collected_emails.csv') 
