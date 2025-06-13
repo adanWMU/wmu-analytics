@@ -14,6 +14,7 @@ pip install -r requirements.txt
 
 # 3. Run the script
 python script.py
+
 🔧 Features
 Extracts emails from any publicly accessible website
 
