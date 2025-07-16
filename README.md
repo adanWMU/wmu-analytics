@@ -1,5 +1,5 @@
 📧 Email Web Scraper
-A simple tool to crawl a website, extract all email addresses, and optionally send customized emails using Gmail SMTP.  
+A simple tool to crawl a website and extract all email addresses 
 **Please make sure that the url name begins with https://
 
 🚀 How to Run
